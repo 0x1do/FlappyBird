@@ -2,15 +2,27 @@ IDEAL
 MODEL small
 STACK 100h
 DATASEG
-    msg db 'hello world$'
+    RANDOM_NUMBER db ?
+    CLOCK equ es:6Ch
 CODESEG
-main:
+proc genRandNum ; generates random number
+    push ax
+    push dx
+    mov ax, 40h
+    mov es, ax
+    mov ax, [CLOCK]
+    xor al, ah
+    and al, 00000111b ; put in al random number between 0 and second operand
+    mov [RANDOM_NUMBER], al
+    add [RANDOM_NUMBER], '0'
+    pop dx
+    pop ax
+    ret 
+endp
+start:
     mov ax, @data
     mov ds, ax
-    lea dx, [msg]
-    mov ah, 9h
-    int 21h
 exit:
     mov ax, 4c00h
     int 21h
-END main
+END start
