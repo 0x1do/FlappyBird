@@ -29,7 +29,7 @@ proc generateRandomNumber
     pop bx
     pop ax
     ret 
-endp genRandNum
+endp generateRandomNumber
 
 proc generateTubes
     push ax
