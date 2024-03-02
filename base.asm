@@ -2,14 +2,25 @@ IDEAL
 MODEL small
 STACK 100h
 DATASEG
-    
+
     RANDOM_NUMBER db ?
+
     TUBE1_LENGTH db ?
     TUBE2_LENGTH db ?
+
     GAP db 50
     SCREEN_HEIGHT db 200
-CODESEG
 
+    TUBE_COLOR db 14
+    BACKGROUND_COLOR db 11
+    BIRD_COLOR db 10
+    
+
+    BIRD_X_POSITION dw 120
+    BIRD_Y_POSITION dw 100
+    
+    VELOCITY dw 1
+CODESEG
 
 proc generateRandomNumber
     push ax
@@ -24,7 +35,6 @@ proc generateRandomNumber
     xor al, ah
     and al, bl ; put in al random number between 0 and second operand
     mov [RANDOM_NUMBER], al
-    add [RANDOM_NUMBER], '0'
 
     pop bx
     pop ax
@@ -45,14 +55,39 @@ proc generateTubes
     pop bx
     pop ax
     ret
-endp generatetubes
+endp generateTubes
+
+proc CheckSpacePressed
+    push ax
+
+    mov ah, 01h  ; Check if a key has been pressed
+    int 16h
+    jz noKeyPress ; Jump if no key is pressed
+    jnz incYValue
+    mov ah, 00h  ; Get the key pressed
+    int 16h
+    cmp al, 32    ; Compare with space key
+
+    mov ax, [bird_y_position]
+    inc ax, 10
+    mov [bird_y_position], ax
+
+    
+noKeyPress:
+    pop ax
+    ret
+endp CheckSpacePressed
+
+
 
 start:
     mov ax, @data
     mov ds, ax
-
+    
     mov ax, 13h
     int 10h
+
+
 
 exit:
     mov ax, 4c00h
