@@ -18,6 +18,12 @@ DATASEG
 
     BIRD_X_POSITION dw 120
     BIRD_Y_POSITION dw 100
+
+    TUBE1_X_POSITION dw 300
+    TUBE1_Y_POSITION dw ?
+
+    TUBE2_X_POSITION dw 450
+    TUBE2_Y_POSITION dw ?
     
     VELOCITY dw 1
 CODESEG
@@ -45,12 +51,14 @@ proc generateTubes
     push ax
     push bx
     
+    call generateRandomNumber
+
     mov al, [RANDOM_NUMBER]
-    mov [TUBE1_LENGTH], al
+    mov [TUBE1_Y_POSITION], al
     mov bl, [SCREEN_HEIGHT]
-    sub bl, [TUBE1_LENGTH]
+    sub bl, [TUBE1_Y_POSITION]
     sub bl, [GAP]
-    mov [TUBE2_LENGTH], bl
+    mov [TUBE2_Y_POSITION], bl
 
     pop bx
     pop ax
@@ -68,18 +76,69 @@ proc CheckSpacePressed
     int 16h
     cmp al, 32    ; Compare with space key
 
-    mov ax, [bird_y_position]
-    inc ax, 10
-    mov [bird_y_position], ax
+    mov ax, [BIRD_Y_POSITION]
+    add ax, 10
+    mov [BIRD_Y_POSITION], ax
 
-    
+
 noKeyPress:
     pop ax
     ret
 endp CheckSpacePressed
 
+proc updateBirdPlace
+    push ax
+    push bx
+    
+    mov ax, [VELOCITY]
+    add ax, 1
+    mov [VELOCITY], ax
+    
+    mov ax, [BIRD_Y_POSITION]
+    add ax, [VELOCITY]
+    mov [BIRD_Y_POSITION], ax
+    
+    cmp ax, 0
+    jle exit
+
+    cmp ax, [SCREEN_HEIGHT]
+    jge exit
 
 
+    pop bx
+    pop ax
+    
+    ret
+endp updateBirdPlace
+
+
+proc tubesMovement
+    push ax
+    
+
+    mov ax, [TUBE1_X_POSITION]
+    sub ax, 1
+    mov [TUBE1_X_POSITION], ax
+
+    cmp ax, 0
+    jge noResetTube1
+    call generateTubes
+    mov [TUBE1_X_POSITION], 300
+
+noResetTube1:
+    mov ax, [TUBE2_X_POSITION]
+    sub ax, 1
+    mov [TUBE2_X_POSITION], ax
+    
+    cmp ax, 0
+    jge noResetTube2
+    call generateTubes
+    mov [TUBE2_X_POSITION], 450
+    
+noResetTube2:
+    pop ax
+    ret
+endp tubesMovement
 start:
     mov ax, @data
     mov ds, ax
