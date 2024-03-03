@@ -138,6 +138,7 @@ proc checkCollision
 
     pop bx
     pop ax
+    ret
 endp checkCollision
 start:
     mov ax, @data
