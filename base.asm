@@ -5,9 +5,6 @@ DATASEG
 
     RANDOM_NUMBER db ?
 
-    TUBE1_LENGTH db ?
-    TUBE2_LENGTH db ?
-
     GAP db 50
     SCREEN_HEIGHT db 200
 
@@ -22,7 +19,7 @@ DATASEG
     TUBE1_X_POSITION dw 300
     TUBE1_Y_POSITION dw ?
 
-    TUBE2_X_POSITION dw 450
+    TUBE2_X_POSITION dw 300
     TUBE2_Y_POSITION dw ?
     
     VELOCITY dw 1
@@ -75,6 +72,7 @@ proc CheckSpacePressed
     mov ah, 00h  ; Get the key pressed
     int 16h
     cmp al, 32    ; Compare with space key
+    jne noKeyPress
 
     mov ax, [BIRD_Y_POSITION]
     add ax, 10
@@ -119,32 +117,42 @@ proc tubesMovement
     mov ax, [TUBE1_X_POSITION]
     sub ax, 1
     mov [TUBE1_X_POSITION], ax
+    mov [TUBE2_X_POSITION], ax
 
     cmp ax, 0
-    jge noResetTube1
+    jge noResetTubes
     call generateTubes
     mov [TUBE1_X_POSITION], 300
-
-noResetTube1:
-    mov ax, [TUBE2_X_POSITION]
-    sub ax, 1
-    mov [TUBE2_X_POSITION], ax
+    mov [TUBE2_X_POSITION], 300
     
-    cmp ax, 0
-    jge noResetTube2
-    call generateTubes
-    mov [TUBE2_X_POSITION], 450
-    
-noResetTube2:
+noResetTubes:
     pop ax
     ret
 endp tubesMovement
+
+proc checkCollision
+    push ax
+    push bx
+
+
+
+    pop bx
+    pop ax
+endp checkCollision
 start:
     mov ax, @data
     mov ds, ax
     
     mov ax, 13h
     int 10h
+
+gameLoop:
+    call checkSpacePressed
+    call updateBirdPlace
+    call tubesMovement
+    call checkCollision
+    ; rest
+    jmp gameLoop
 
 
 
