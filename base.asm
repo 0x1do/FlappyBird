@@ -77,7 +77,12 @@ proc CheckSpacePressed
     jne no_key_press
 
     mov ax, [BIRD_Y_POSITION]
-    add ax, 10
+    sub ax, 15
+    cmp ax, 0 
+    jge new_placing
+    mov ax,0
+
+new_placing:
     mov [BIRD_Y_POSITION], ax
 
 
@@ -244,19 +249,29 @@ proc updateBirdPlace
     push ax
     push bx
     
+    ; gravity
     mov ax, [VELOCITY]
     add ax, 1
+    cmp ax, 5 ; so the falling wont be too fast
+    jle velocity_fine
+    mov ax, 5
+
+velocity_fine:
     mov [VELOCITY], ax
     
     mov ax, [BIRD_Y_POSITION]
-    add ax, [VELOCITY]
-    mov [BIRD_Y_POSITION], ax
-    
-    cmp ax, 0
-    jle exit
+    add ax, [VELOCITY] ; pushing the bird down
+    cmp ax, 0 ; if bird goes above screen height
+    jge new_position
+    mov ax, 0
 
-    cmp ax, [SCREEN_HEIGHT]
-    jge exit
+new_position:
+    cmp ax, [SCREEN_HEIGHT] ; if bird goes below the screen
+    jle placing_update
+    mov ax, [SCREEN_HEIGHT]
+
+placing_update:
+    mov [BIRD_Y_POSITION], ax
 
 
     pop bx
