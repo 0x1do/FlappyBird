@@ -19,10 +19,10 @@ DATASEG
 
     TUBES_WIDTH dw 15
     TUBE1_X_POSITION dw 300
-    TUBE1_Y_POSITION dw ?
+    TUBE1_Y_POSITION dw 75
 
     TUBE2_X_POSITION dw 300
-    TUBE2_Y_POSITION dw ?
+    TUBE2_Y_POSITION dw 125
     
     VELOCITY dw 1
 CODESEG
@@ -146,6 +146,7 @@ proc drawSquare
     push cx
     push dx
 
+    ; Use local variables for better readability
     mov ax, [BIRD_X_POSITION]
     mov bx, [BIRD_Y_POSITION]
     mov cx, [BIRD_SIZE]
@@ -153,6 +154,7 @@ proc drawSquare
 draw_loop:
     push cx
     
+    ; Use local variables
     mov cx, [BIRD_SIZE]
     mov dx, bx    
 
@@ -184,7 +186,7 @@ proc drawTube
     ; Drawing the upper tube
     mov ax, [TUBE1_X_POSITION] ; Tube's X position
     mov cx, [TUBES_WIDTH]      ; Tube width
-    mov dx, 0                  ; Start at top of the screen
+    mov dx, 0                  ; Start at the top of the screen
 
 upper_tube_loop:
     push cx
@@ -199,25 +201,26 @@ draw_upper_tube_pixel:
     mov al, [TUBE_COLOR]      
     int 10h                  
 
-    inc bx                    ; Move to next pixel
+    inc bx                    ; Move to the next pixel
     loop draw_upper_tube_pixel
 
     pop cx
-    inc ax                    ; Move to next column
+    inc ax                    ; Move to the next column
     cmp ax, [TUBE1_X_POSITION]
     add ax, [TUBES_WIDTH]
     jl upper_tube_loop
 
 lower_tube_start:
-    mov dx, [TUBE1_Y_POSITION] ; Starting Y of the upper tube
-    add dx, [GAP]             ; Add the gap to get the starting Y of the lower tube
+    ; Adjust the starting Y of the lower tube
+    mov dx, [TUBE1_Y_POSITION]
+    add dx, [GAP]
 
     mov ax, [TUBE1_X_POSITION] ; Tube X
     mov cx, [TUBES_WIDTH]      ; Tube width
 
 lower_tube_loop:
     push cx
-    mov bx, dx                ; Y position for lower tube
+    mov bx, dx                ; Y position for the lower tube
 
     mov cx, [SCREEN_HEIGHT]   ; Bottom of the screen
     sub cx, dx                ; Height of the lower tube
@@ -228,13 +231,13 @@ draw_lower_tube_pixel:
     mov al, [TUBE_COLOR]   
     int 10h                   
 
-    inc bx                    ; Move to next pixel
+    inc bx                    ; Move to the next pixel
     loop draw_lower_tube_pixel
 
     pop cx
-    inc ax                    ; Move to next column
+    inc ax                    ; Move to the next column
     cmp ax, [TUBE1_X_POSITION]
-    add ax, 15
+    add ax, [TUBES_WIDTH]
     jl lower_tube_loop
 
 end_draw:
@@ -287,12 +290,13 @@ start:
     int 10h
 
 game_loop:
-    call checkSpacePressed
-    call updateBirdPlace
-    call tubesMovement
     call drawTube         ; Tube1
     call drawTube         ; Tube2
     call drawSquare       ; Draw bird
+    call checkSpacePressed
+    call updateBirdPlace
+    call tubesMovement
+
     call checkCollision
 
     jmp game_loop
