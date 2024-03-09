@@ -12,16 +12,18 @@ DATASEG
     ; tubes variables:
     TUBES_COLOR db 14
     TUBES_WIDTH dw 15
-    TUBES_X_POSITION dw 300
-    TUBES_Y_POSITION dw 0
-    TUBE_HEIGHT dw 75
+    TUBES_X_POSITION dw 275
+    UPPER_TUBE_Y_POSITION dw 0
+    LOWER_TUBE_Y_POSITION dw 50 ; GAP size
+    LOWER_TUBE_HEIGHT dw 75
+    UPPER_TUBE_HEIGHT dw 75
     
     ; bird variables:
     BIRD_COLOR db 7
     BIRD_WIDTH dw 15
     BIRD_HEIGHT dw 15
     BIRD_X_POSITION dw 100
-    BIRD_Y_POSITION dw 100
+    BIRD_Y_POSITION dw 90
     
     VELOCITY dw 1
 CODESEG
@@ -32,7 +34,8 @@ proc generateRandomNumber
 
     mov bx, [SCREEN_HEIGHT]
     sub bx, [GAP]
-    sub bx, 1 ; bl now contains the highest length tube1 can be
+    sub bx, [GAP]
+    sub bx, 1 ; bl now contains the highest random possible value
     mov ax, 40h
     mov es, ax
     mov ax, [es:6Ch]
@@ -50,7 +53,11 @@ proc generateTubesValues
     push ax
     push bx
     
-    call generateRandomNumber
+    ;call generateRandomNumber
+    
+    mov ax, [UPPER_TUBE_HEIGHT]
+    add [LOWER_TUBE_HEIGHT], ax
+
 
     ; mov ax, [RANDOM_NUMBER]
     ; mov [TUBE1_Y_POSITION], ax
@@ -81,62 +88,62 @@ proc CheckSpacePressed
     jge new_placing
     mov ax,0
 
-new_placing:
-    mov [BIRD_Y_POSITION], ax
+    new_placing:
+        mov [BIRD_Y_POSITION], ax
 
 
-no_key_press:
-    pop ax
-    ret
+    no_key_press:
+        pop ax
+        ret
 endp CheckSpacePressed
 
 
 proc tubesMovement
     push ax
     
-    ; mov ax, [TUBE1_X_POSITION]
-    ; sub ax, 1
-    ; mov [TUBE1_X_POSITION], ax
-    ; mov [TUBE2_X_POSITION], ax
+    mov ax, [TUBE1_X_POSITION]
+    sub ax, 1
+    mov [TUBE1_X_POSITION], ax
+    mov [TUBE2_X_POSITION], ax
 
-    ; cmp ax, 0
-    ; jge noResetTubes
-    ; call generateTubesValues
-    ; mov [TUBE1_X_POSITION], 300
-    ; mov [TUBE2_X_POSITION], 300
+    cmp ax, 0
+    jge noResetTubes
+    call generateTubesValues
+    mov [TUBE1_X_POSITION], 300
+    mov [TUBE2_X_POSITION], 300
     
-noResetTubes:
-    pop ax
-    ret
+    noResetTubes:
+        pop ax
+        ret
 endp tubesMovement
 
 proc checkCollision
     push ax
     push bx
 
-    ; mov ax, [TUBE1_X_POSITION]
-    ; cmp ax, [BIRD_X_POSITION]
-    ; jne near noCollision
+    mov ax, [TUBE1_X_POSITION]
+    cmp ax, [BIRD_X_POSITION]
+    jne near noCollision
 
-    ; mov ax, [BIRD_Y_POSITION]
-    ; mov bx, [TUBE1_Y_POSITION]
-    ; add bx, [GAP]
-    ; cmp ax, bx
-    ; jl near collision
+    mov ax, [BIRD_Y_POSITION]
+    mov bx, [TUBE1_Y_POSITION]
+    add bx, [GAP]
+    cmp ax, bx
+    jl near collision
 
-    ; mov bx, [TUBE2_Y_POSITION]
-    ; cmp ax, bx
-    ; jl near collision
+    mov bx, [TUBE2_Y_POSITION]
+    cmp ax, bx
+    jl near collision
     
-    ; jmp near noCollision
+    jmp near noCollision
 
-collision:
-    jmp near exit
+    collision:
+        jmp near exit
 
-noCollision:
-    pop bx
-    pop ax
-    ret
+    noCollision:
+        pop bx
+        pop ax
+        ret
 endp checkCollision
 
 proc drawBird
@@ -145,7 +152,7 @@ proc drawBird
     push cx
     push dx
 
-    mov [BIRD_Y_POSITION], 100
+    mov [BIRD_Y_POSITION], 90
     mov cx, [BIRD_HEIGHT]
     outer_loop:
         push cx
@@ -178,36 +185,63 @@ proc drawBird
 
 endp drawBird
 
-proc drawTube
+proc drawTubes
     push ax
     push bx
     push cx
     push dx
 
-    mov [TUBES_Y_POSITION], 0
-    mov cx, [TUBE_HEIGHT]
-    tube_outer_loop:
-        push cx
-
-        mov [TUBES_X_POSITION], 300 ; original value
-        mov cx, [TUBES_WIDTH]
-        tube_inner_loop:
+    upper_tube:
+        mov [UPPER_TUBE_Y_POSITION], 0
+        mov cx, [UPPER_TUBE_HEIGHT]
+        tube_outer_loop:
             push cx
 
-            mov cx, [TUBES_X_POSITION]
-            mov dx, [TUBES_Y_POSITION]
-            mov al, [TUBES_COLOR]
-            mov ah, 0ch
-            mov bx, 0                     
-            int 10h
-            inc [TUBES_X_POSITION]
-            
-            pop cx
-            loop tube_inner_loop
+            mov [TUBES_X_POSITION], 275 ; original value
+            mov cx, [TUBES_WIDTH]
+            tube_inner_loop:
+                push cx
 
-        inc [TUBES_Y_POSITION]
-        pop cx  
-        loop tube_outer_loop
+                mov cx, [TUBES_X_POSITION]
+                mov dx, [UPPER_TUBE_Y_POSITION]
+                mov al, [TUBES_COLOR]
+                mov ah, 0ch
+                mov bx, 0                     
+                int 10h
+                inc [TUBES_X_POSITION]
+                
+                pop cx
+                loop tube_inner_loop
+
+            inc [UPPER_TUBE_Y_POSITION]
+            pop cx  
+            loop tube_outer_loop
+
+    lower_tube:
+        mov [LOWER_TUBE_Y_POSITION], 125
+        mov cx, [LOWER_TUBE_HEIGHT]
+        lower_tube_outer_loop:
+            push cx
+
+            mov [TUBES_X_POSITION], 275 ; original value
+            mov cx, [TUBES_WIDTH]
+            lower_tube_inner_loop:
+                push cx
+
+                mov cx, [TUBES_X_POSITION]
+                mov dx, [LOWER_TUBE_Y_POSITION]
+                mov al, [TUBES_COLOR]
+                mov ah, 0ch
+                mov bx, 0                     
+                int 10h
+                inc [TUBES_X_POSITION]
+                
+                pop cx
+                loop lower_tube_inner_loop
+
+            inc [LOWER_TUBE_Y_POSITION]
+            pop cx  
+            loop lower_tube_outer_loop
 
     pop dx
     pop cx
@@ -215,7 +249,7 @@ proc drawTube
     pop ax
     ret 0
 
-endp drawTube
+endp drawTubes
 
 proc updateBirdPlace
     push ax
@@ -228,22 +262,21 @@ proc updateBirdPlace
     jle velocity_fine
     mov ax, 5
 
-velocity_fine:
-    mov [VELOCITY], ax
-    
-    mov ax, [BIRD_Y_POSITION]
-    add ax, [VELOCITY] ; pushing the bird down
-    cmp ax, 0 ; if bird goes above screen height
-    jge new_position
-    mov ax, 0
+    velocity_fine:
+        mov [VELOCITY], ax
+        mov ax, [BIRD_Y_POSITION]
+        add ax, [VELOCITY] ; pushing the bird down
+        cmp ax, 0 ; if bird goes above screen height
+        jge new_position
+        mov ax, 0
 
-new_position:
-    cmp ax, [SCREEN_HEIGHT] ; if bird goes below the screen
-    jle placing_update
-    mov ax, [SCREEN_HEIGHT]
+    new_position:
+        cmp ax, [SCREEN_HEIGHT] ; if bird goes below the screen
+        jle placing_update
+        mov ax, [SCREEN_HEIGHT]
 
-placing_update:
-    mov [BIRD_Y_POSITION], ax
+    placing_update:
+        mov [BIRD_Y_POSITION], ax
 
 
     pop bx
@@ -259,8 +292,8 @@ start:
     int 10h
 
 game_loop:
-    call drawTube         ; Tube1
-    ;call drawTube         ; Tube2
+    ;call generateTubesValues
+    call drawTubes 
     call drawBird
     call checkSpacePressed
     call updateBirdPlace
