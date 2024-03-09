@@ -12,8 +12,8 @@ DATASEG
     ; tubes variables:
     TUBES_COLOR db 14
     TUBES_WIDTH dw 15
-    TUBES_X_POSITION dw 200
-    TUBES_Y_POSITION dw 100
+    TUBES_X_POSITION dw 300
+    TUBES_Y_POSITION dw 0
     TUBE_HEIGHT dw 75
     
     ; bird variables:
@@ -184,12 +184,12 @@ proc drawTube
     push cx
     push dx
 
-    mov [TUBES_Y_POSITION], 100
+    mov [TUBES_Y_POSITION], 0
     mov cx, [TUBE_HEIGHT]
     tube_outer_loop:
         push cx
 
-        mov [TUBES_X_POSITION], 50 ; original value
+        mov [TUBES_X_POSITION], 300 ; original value
         mov cx, [TUBES_WIDTH]
         tube_inner_loop:
             push cx
