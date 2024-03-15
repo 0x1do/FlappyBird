@@ -162,67 +162,72 @@ proc drawBird
 endp drawBird
 
 proc drawTubes
-    push ax
-    push bx
-    push cx
-    push dx
+    push ax bx cx dx bp
+    mov bp, sp
+    sub sp, 6
+    
+    tmp_x equ [bp-4]
+    upper_tmp_y equ [bp-2]
+    lower_tmp_y equ [bp-6]
+    
 
     upper_tube:
-        mov [UPPER_TUBE_Y_POSITION], 0
+        mov ax, [UPPER_TUBE_Y_POSITION]
+        mov upper_tmp_y, ax
         mov cx, [UPPER_TUBE_HEIGHT]
         tube_outer_loop:
             push cx
 
-            mov [TUBES_X_POSITION], 275 ; original value
+            mov ax, [TUBES_X_POSITION]
+            mov tmp_x, ax
             mov cx, [TUBES_WIDTH]
             tube_inner_loop:
                 push cx
 
-                mov cx, [TUBES_X_POSITION]
-                mov dx, [UPPER_TUBE_Y_POSITION]
+                mov cx, tmp_x
+                mov dx, upper_tmp_y
                 mov al, [TUBES_COLOR]
                 mov ah, 0ch
                 mov bx, 0                     
                 int 10h
-                inc [TUBES_X_POSITION]
+                inc tmp_x
                 
                 pop cx
                 loop tube_inner_loop
 
-            inc [UPPER_TUBE_Y_POSITION]
+            inc upper_tmp_y
             pop cx  
             loop tube_outer_loop
 
     lower_tube:
-        mov [LOWER_TUBE_Y_POSITION], 125
-        mov cx, [LOWER_TUBE_HEIGHT]
+        mov ax, [LOWER_TUBE_Y_POSITION]
+        mov lower_tmp_y, ax
+
         lower_tube_outer_loop:
             push cx
 
-            mov [TUBES_X_POSITION], 275 ; original value
+            mov ax, [TUBES_X_POSITION]
+            mov tmp_x, ax
             mov cx, [TUBES_WIDTH]
             lower_tube_inner_loop:
                 push cx
 
-                mov cx, [TUBES_X_POSITION]
-                mov dx, [LOWER_TUBE_Y_POSITION]
+                mov cx, tmp_x
+                mov dx, lower_tmp_y
                 mov al, [TUBES_COLOR]
                 mov ah, 0ch
                 mov bx, 0                     
                 int 10h
-                inc [TUBES_X_POSITION]
+                inc tmp_x
                 
                 pop cx
                 loop lower_tube_inner_loop
 
-            inc [LOWER_TUBE_Y_POSITION]
+            inc tmp_y
             pop cx  
             loop lower_tube_outer_loop
 
-    pop dx
-    pop cx
-    pop bx
-    pop ax
+    pop bp dx cx bx ax
     ret 0
 
 endp drawTubes
@@ -301,67 +306,72 @@ proc cleanBird
 endp cleanBird
 
 proc cleanTubes
-    push ax
-    push bx
-    push cx
-    push dx
+    push ax bx cx dx bp
+    mov bp, sp
+    sub sp, 6
+    
+    tmp_x equ [bp-4]
+    upper_tmp_y equ [bp-2]
+    lower_tmp_y equ [bp-6]
+    
 
     clean_upper_tube:
-        mov [UPPER_TUBE_Y_POSITION], 0
+        mov ax, [UPPER_TUBE_Y_POSITION]
+        mov upper_tmp_y, ax
         mov cx, [UPPER_TUBE_HEIGHT]
         clean_tube_outer_loop:
             push cx
 
-            mov [TUBES_X_POSITION], 275 ; original value
+            mov ax, [TUBES_X_POSITION]
+            mov tmp_x, ax
             mov cx, [TUBES_WIDTH]
             clean_tube_inner_loop:
                 push cx
 
-                mov cx, [TUBES_X_POSITION]
-                mov dx, [UPPER_TUBE_Y_POSITION]
-                mov al, [TUBES_COLOR]
-                mov ah, 0ch
-                mov bx, 0                     
-                int 10h
-                inc [TUBES_X_POSITION]
-                
-                pop cx
-                loop clean_tube_inner_loop
-
-            inc [UPPER_TUBE_Y_POSITION]
-            pop cx  
-            loop clean_tube_outer_loop
-
-    clean_lower_tube:
-        mov [LOWER_TUBE_Y_POSITION], 125
-        mov cx, [LOWER_TUBE_HEIGHT]
-        clean_lower_tube_outer_loop:
-            push cx
-
-            mov [TUBES_X_POSITION], 275 ; original value
-            mov cx, [TUBES_WIDTH]
-            clean_lower_tube_inner_loop:
-                push cx
-
-                mov cx, [TUBES_X_POSITION]
-                mov dx, [LOWER_TUBE_Y_POSITION]
+                mov cx, tmp_x
+                mov dx, upper_tmp_y
                 mov al, [BLACK_COLOR]
                 mov ah, 0ch
                 mov bx, 0                     
                 int 10h
-                inc [TUBES_X_POSITION]
+                inc tmp_x
+                
+                pop cx
+                loop clean_tube_inner_loop
+
+            inc upper_tmp_y
+            pop cx  
+            loop clean_tube_outer_loop
+
+    clean_lower_tube:
+        mov ax, [LOWER_TUBE_Y_POSITION]
+        mov lower_tmp_y, ax
+
+        clean_lower_tube_outer_loop:
+            push cx
+
+            mov ax, [TUBES_X_POSITION]
+            mov tmp_x, ax
+            mov cx, [TUBES_WIDTH]
+            clean_lower_tube_inner_loop:
+                push cx
+
+                mov cx, tmp_x
+                mov dx, lower_tmp_y
+                mov al, [BLACK_COLOR]
+                mov ah, 0ch
+                mov bx, 0                     
+                int 10h
+                inc tmp_x
                 
                 pop cx
                 loop clean_lower_tube_inner_loop
 
-            inc [LOWER_TUBE_Y_POSITION]
+            inc tmp_y
             pop cx  
             loop clean_lower_tube_outer_loop
 
-    pop dx
-    pop cx
-    pop bx
-    pop ax
+    pop bp dx cx bx ax
     ret 0
 endp cleanTubes
 
@@ -408,7 +418,7 @@ game_loop:
     call drawBird
     call checkSpacePressed
     call updateBirdPlace
-    ;call tubesMovement
+    call tubesMovement
     call cleanBird
     call cleanTubes
     call checkCollision
