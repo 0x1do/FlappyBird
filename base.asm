@@ -8,6 +8,7 @@ DATASEG
     GAP dw 50
     SCREEN_HEIGHT dw 200
     BACKGROUND_COLOR db 11
+    BLACK_COLOR  db 01
 
     ; tubes variables:
     TUBES_COLOR db 14
@@ -53,18 +54,16 @@ proc generateTubesValues
     push ax
     push bx
     
-    ;call generateRandomNumber
+    call generateRandomNumber
     
-    mov ax, [UPPER_TUBE_HEIGHT]
-    add [LOWER_TUBE_HEIGHT], ax
-
-
-    ; mov ax, [RANDOM_NUMBER]
-    ; mov [TUBE1_Y_POSITION], ax
-    ; mov bx, [SCREEN_HEIGHT]
-    ; sub bx, [TUBE1_Y_POSITION]
-    ; sub bx, [GAP]
-    ; mov [TUBE2_Y_POSITION], bx
+    ; upper tube calc
+    mov ax, [RANDOM_NUMBER]
+    mov [UPPER_TUBE_HEIGHT], ax
+    mov bx, [SCREEN_HEIGHT]
+    sub bx, ax
+    sub bx, [GAP]
+    
+    mov [LOWER_TUBE_HEIGHT], bx
 
     pop bx
     pop ax
@@ -82,11 +81,12 @@ proc CheckSpacePressed
     cmp al, 32    ; Compare with space key
     jne no_key_press
 
+
     mov ax, [BIRD_Y_POSITION]
-    sub ax, 15
+    sub ax, 10
     cmp ax, 0 
     jge new_placing
-    mov ax,0
+    mov ax, 0
 
     new_placing:
         mov [BIRD_Y_POSITION], ax
@@ -101,86 +101,62 @@ endp CheckSpacePressed
 proc tubesMovement
     push ax
     
-    mov ax, [TUBE1_X_POSITION]
+    mov ax, [TUBES_X_POSITION]
     sub ax, 1
-    mov [TUBE1_X_POSITION], ax
-    mov [TUBE2_X_POSITION], ax
+    mov [TUBES_X_POSITION], ax
 
     cmp ax, 0
-    jge noResetTubes
+    jge short noResetTubes
     call generateTubesValues
-    mov [TUBE1_X_POSITION], 300
-    mov [TUBE2_X_POSITION], 300
-    
+    mov [TUBES_X_POSITION], 310
+
     noResetTubes:
         pop ax
         ret
 endp tubesMovement
 
-proc checkCollision
-    push ax
-    push bx
+proc drawBird
+    push ax bx cx dx
+    push bp
+    mov bp, sp
 
-    mov ax, [TUBE1_X_POSITION]
-    cmp ax, [BIRD_X_POSITION]
-    jne near noCollision
+    sub sp, 4
+
+    tmp_x equ [bp-4]
+    tmp_y equ [bp-2]
+
+
+    
 
     mov ax, [BIRD_Y_POSITION]
-    mov bx, [TUBE1_Y_POSITION]
-    add bx, [GAP]
-    cmp ax, bx
-    jl near collision
-
-    mov bx, [TUBE2_Y_POSITION]
-    cmp ax, bx
-    jl near collision
-    
-    jmp near noCollision
-
-    collision:
-        jmp near exit
-
-    noCollision:
-        pop bx
-        pop ax
-        ret
-endp checkCollision
-
-proc drawBird
-    push ax
-    push bx
-    push cx
-    push dx
-
-    mov [BIRD_Y_POSITION], 90
+    mov tmp_y, ax ; set original value
     mov cx, [BIRD_HEIGHT]
     outer_loop:
         push cx
 
-        mov [BIRD_X_POSITION], 50 ; original value
+        mov ax, [BIRD_X_POSITION]
+        mov tmp_x, ax ; set original value
         mov cx, [BIRD_WIDTH]
         inner_loop:
             push cx
 
-            mov cx, [BIRD_X_POSITION]
-            mov dx, [BIRD_Y_POSITION]
+            mov cx, tmp_x
+            mov dx, tmp_y
             mov al, [BIRD_COLOR]
             mov ah, 0ch
             mov bx, 0                     
             int 10h
-            inc [BIRD_X_POSITION]
-            
+            add tmp_x, 1 
+     
             pop cx
             loop inner_loop
 
-        inc [BIRD_Y_POSITION]
+        add tmp_y, 1
         pop cx  
         loop outer_loop
 
-    pop dx
-    pop cx
-    pop bx
-    pop ax
+    add sp, 4
+    pop bp dx cx bx ax
     ret 0
 
 endp drawBird
@@ -254,7 +230,7 @@ endp drawTubes
 proc updateBirdPlace
     push ax
     push bx
-    
+
     ; gravity
     mov ax, [VELOCITY]
     add ax, 1
@@ -264,18 +240,14 @@ proc updateBirdPlace
 
     velocity_fine:
         mov [VELOCITY], ax
-        mov ax, [BIRD_Y_POSITION]
-        add ax, [VELOCITY] ; pushing the bird down
-        cmp ax, 0 ; if bird goes above screen height
-        jge new_position
-        mov ax, 0
+        
+    mov ax, [BIRD_Y_POSITION]
+    add ax, [VELOCITY] ; pushing the bird down
+    cmp ax, [SCREEN_HEIGHT] ; if bird goes above screen height
+    jge new_position
+    mov ax, [SCREEN_HEIGHT]
 
     new_position:
-        cmp ax, [SCREEN_HEIGHT] ; if bird goes below the screen
-        jle placing_update
-        mov ax, [SCREEN_HEIGHT]
-
-    placing_update:
         mov [BIRD_Y_POSITION], ax
 
 
@@ -283,6 +255,145 @@ proc updateBirdPlace
     pop ax
     ret
 endp updateBirdPlace
+
+proc cleanBird
+    push ax bx cx dx bp
+    
+        mov bp, sp
+
+    sub sp, 4
+
+    tmp_x equ [bp-4]
+    tmp_y equ [bp-2]
+    
+
+    mov ax, [BIRD_Y_POSITION]
+    mov tmp_y, ax ; set original value
+    mov cx, [BIRD_HEIGHT]
+    clean_outer_loop:
+        push cx
+
+        mov ax, [BIRD_X_POSITION]
+        mov tmp_x, ax ; set original value
+        mov cx, [BIRD_WIDTH]
+        clean_inner_loop:
+            push cx
+
+            mov cx, tmp_x
+            mov dx, tmp_y
+            mov al, [BLACK_COLOR]
+            mov ah, 0ch
+            mov bx, 0                     
+            int 10h
+            add tmp_x, 1 
+     
+            pop cx
+            loop clean_inner_loop
+
+        add tmp_y, 1
+        pop cx  
+        loop clean_outer_loop
+
+    add sp, 4
+
+    pop bp dx cx bx ax 
+    ret 0
+endp cleanBird
+
+proc cleanTubes
+    push ax
+    push bx
+    push cx
+    push dx
+
+    clean_upper_tube:
+        mov [UPPER_TUBE_Y_POSITION], 0
+        mov cx, [UPPER_TUBE_HEIGHT]
+        clean_tube_outer_loop:
+            push cx
+
+            mov [TUBES_X_POSITION], 275 ; original value
+            mov cx, [TUBES_WIDTH]
+            clean_tube_inner_loop:
+                push cx
+
+                mov cx, [TUBES_X_POSITION]
+                mov dx, [UPPER_TUBE_Y_POSITION]
+                mov al, [TUBES_COLOR]
+                mov ah, 0ch
+                mov bx, 0                     
+                int 10h
+                inc [TUBES_X_POSITION]
+                
+                pop cx
+                loop clean_tube_inner_loop
+
+            inc [UPPER_TUBE_Y_POSITION]
+            pop cx  
+            loop clean_tube_outer_loop
+
+    clean_lower_tube:
+        mov [LOWER_TUBE_Y_POSITION], 125
+        mov cx, [LOWER_TUBE_HEIGHT]
+        clean_lower_tube_outer_loop:
+            push cx
+
+            mov [TUBES_X_POSITION], 275 ; original value
+            mov cx, [TUBES_WIDTH]
+            clean_lower_tube_inner_loop:
+                push cx
+
+                mov cx, [TUBES_X_POSITION]
+                mov dx, [LOWER_TUBE_Y_POSITION]
+                mov al, [BLACK_COLOR]
+                mov ah, 0ch
+                mov bx, 0                     
+                int 10h
+                inc [TUBES_X_POSITION]
+                
+                pop cx
+                loop clean_lower_tube_inner_loop
+
+            inc [LOWER_TUBE_Y_POSITION]
+            pop cx  
+            loop clean_lower_tube_outer_loop
+
+    pop dx
+    pop cx
+    pop bx
+    pop ax
+    ret 0
+endp cleanTubes
+
+proc checkCollision
+    push ax
+    push bx
+
+    mov ax, [TUBES_X_POSITION]
+    cmp ax, [BIRD_X_POSITION]
+    jne short noCollision
+
+    ; check collision with upper tube
+    mov ax, [BIRD_Y_POSITION]   
+    cmp ax, [UPPER_TUBE_HEIGHT]
+    jle short collision
+
+    ; check collision with lower tube
+    mov bx, [SCREEN_HEIGHT]
+    sub bx, [LOWER_TUBE_HEIGHT]
+    cmp ax, bx
+    jge short collision
+    
+    jmp short noCollision
+
+    collision:
+        jmp short exit
+
+    noCollision:
+        pop bx
+        pop ax
+        ret
+endp checkCollision
 
 start:
     mov ax, @data
@@ -298,11 +409,11 @@ game_loop:
     call checkSpacePressed
     call updateBirdPlace
     ;call tubesMovement
-
-    ;call checkCollision
+    call cleanBird
+    call cleanTubes
+    call checkCollision
 
     jmp game_loop
-
 
 
 exit:
