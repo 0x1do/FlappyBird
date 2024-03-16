@@ -15,7 +15,7 @@ DATASEG
     TUBES_WIDTH dw 15
     TUBES_X_POSITION dw 275
     UPPER_TUBE_Y_POSITION dw 0
-    LOWER_TUBE_Y_POSITION dw 50 ; GAP size
+    LOWER_TUBE_Y_POSITION dw 125 ; GAP size
     LOWER_TUBE_HEIGHT dw 75
     UPPER_TUBE_HEIGHT dw 75
     
@@ -23,7 +23,7 @@ DATASEG
     BIRD_COLOR db 7
     BIRD_WIDTH dw 15
     BIRD_HEIGHT dw 15
-    BIRD_X_POSITION dw 100
+    BIRD_X_POSITION dw 50
     BIRD_Y_POSITION dw 90
     
     VELOCITY dw 1
@@ -189,7 +189,7 @@ proc drawTubes
                 mov al, [TUBES_COLOR]
                 mov ah, 0ch
                 mov bx, 0                     
-                int 10h
+                int 10h ; drawing a pixel
                 inc tmp_x
                 
                 pop cx
@@ -202,6 +202,7 @@ proc drawTubes
     lower_tube:
         mov ax, [LOWER_TUBE_Y_POSITION]
         mov lower_tmp_y, ax
+        mov cx, [LOWER_TUBE_HEIGHT]
 
         lower_tube_outer_loop:
             push cx
@@ -223,10 +224,11 @@ proc drawTubes
                 pop cx
                 loop lower_tube_inner_loop
 
-            inc tmp_y
+            inc lower_tmp_y
             pop cx  
             loop lower_tube_outer_loop
 
+    add sp, 6
     pop bp dx cx bx ax
     ret 0
 
@@ -416,12 +418,12 @@ game_loop:
     ;call generateTubesValues
     call drawTubes 
     call drawBird
-    call checkSpacePressed
-    call updateBirdPlace
-    call tubesMovement
-    call cleanBird
-    call cleanTubes
-    call checkCollision
+    ;call checkSpacePressed
+    ;call updateBirdPlace
+    ;call tubesMovement
+    ;call cleanBird
+    ;call cleanTubes
+    ;call checkCollision
 
     jmp game_loop
 
