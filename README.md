@@ -1,2 +1,4 @@
 # Flappy Bird
-Just started this side project in TASM assembly
+side project in TASM assembly
+
+ *not a finished project* 
