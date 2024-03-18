@@ -99,20 +99,13 @@ endp CheckSpacePressed
 
 
 proc tubesMovement
-    push ax
-    
+    push ax bx cx dx bp
+
     mov ax, [TUBES_X_POSITION]
-    sub ax, 1
+    sub ax, 3
     mov [TUBES_X_POSITION], ax
 
-    cmp ax, 0
-    jge short noResetTubes
-    call generateTubesValues
-    mov [TUBES_X_POSITION], 310
-
-    noResetTubes:
-        pop ax
-        ret
+    pop bp dx cx bx ax
 endp tubesMovement
 
 proc drawBird
@@ -234,40 +227,11 @@ proc drawTubes
 
 endp drawTubes
 
-proc updateBirdPlace
-    push ax
-    push bx
 
-    ; gravity
-    mov ax, [VELOCITY]
-    add ax, 1
-    cmp ax, 5 ; so the falling wont be too fast
-    jle velocity_fine
-    mov ax, 5
-
-    velocity_fine:
-        mov [VELOCITY], ax
-        
-    mov ax, [BIRD_Y_POSITION]
-    add ax, [VELOCITY] ; pushing the bird down
-    cmp ax, [SCREEN_HEIGHT] ; if bird goes above screen height
-    jge new_position
-    mov ax, [SCREEN_HEIGHT]
-
-    new_position:
-        mov [BIRD_Y_POSITION], ax
-
-
-    pop bx
-    pop ax
-    ret
-endp updateBirdPlace
 
 proc cleanBird
-    push ax bx cx dx bp
-    
-        mov bp, sp
-
+    push ax bx cx dx bp 
+    mov bp, sp
     sub sp, 4
 
     tmp_x equ [bp-4]
@@ -332,10 +296,10 @@ proc cleanTubes
 
                 mov cx, tmp_x
                 mov dx, upper_tmp_y
-                mov al, [BLACK_COLOR]
+                mov al, [TUBES_COLOR]
                 mov ah, 0ch
                 mov bx, 0                     
-                int 10h
+                int 10h ; drawing a pixel
                 inc tmp_x
                 
                 pop cx
@@ -348,6 +312,7 @@ proc cleanTubes
     clean_lower_tube:
         mov ax, [LOWER_TUBE_Y_POSITION]
         mov lower_tmp_y, ax
+        mov cx, [LOWER_TUBE_HEIGHT]
 
         clean_lower_tube_outer_loop:
             push cx
@@ -360,7 +325,7 @@ proc cleanTubes
 
                 mov cx, tmp_x
                 mov dx, lower_tmp_y
-                mov al, [BLACK_COLOR]
+                mov al, [TUBES_COLOR]
                 mov ah, 0ch
                 mov bx, 0                     
                 int 10h
@@ -369,10 +334,11 @@ proc cleanTubes
                 pop cx
                 loop clean_lower_tube_inner_loop
 
-            inc tmp_y
+            inc lower_tmp_y
             pop cx  
             loop clean_lower_tube_outer_loop
 
+    add sp, 6
     pop bp dx cx bx ax
     ret 0
 endp cleanTubes
@@ -407,6 +373,39 @@ proc checkCollision
         ret
 endp checkCollision
 
+proc updateBirdPlace
+    push ax
+    push bx
+
+    ; gravity
+    mov ax, [VELOCITY]
+    add ax, 1
+    cmp ax, 5 ; so the falling wont be too fast
+    jle velocity_fine
+    mov ax, 5
+
+    velocity_fine:
+        mov [VELOCITY], ax
+        
+    mov ax, [BIRD_Y_POSITION]
+    add ax, [VELOCITY] ; pushing the bird down
+    cmp ax, [SCREEN_HEIGHT] ; if bird goes above screen height
+    jge new_position
+    cmp ax, 0 
+    jge new_position
+    mov ax, [SCREEN_HEIGHT]
+
+    mov [BIRD_Y_POSITION], ax
+    new_position:
+        mov bx, [SCREEN_HEIGHT]
+        add bx, 5
+        mov [BIRD_Y_POSITION], bx
+
+    pop bx
+    pop ax
+    ret
+endp updateBirdPlace
+
 start:
     mov ax, @data
     mov ds, ax
@@ -420,10 +419,12 @@ game_loop:
     call drawBird
     ;call checkSpacePressed
     ;call updateBirdPlace
-    ;call tubesMovement
+    call tubesMovement
     ;call cleanBird
     ;call cleanTubes
     ;call checkCollision
+
+
 
     jmp game_loop
 
