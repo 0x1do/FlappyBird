@@ -83,7 +83,7 @@ proc CheckSpacePressed
 
 
     mov ax, [BIRD_Y_POSITION]
-    sub ax, 10
+    sub ax, 1
     cmp ax, 0 
     jge new_placing
     mov ax, 0
@@ -156,7 +156,7 @@ endp drawBird
 
 
 
-proc cleanBird
+proc updateBird
     push ax bx cx dx bp 
     mov bp, sp
     sub sp, 4
@@ -165,43 +165,64 @@ proc cleanBird
     tmp_y equ [bp-2]
     
 
+
+    ; erase lower row
     mov ax, [BIRD_Y_POSITION]
-    mov tmp_y, ax ; set original value
+    mov tmp_y, ax
+    mov ax, [BIRD_HEIGHT]
+    add tmp_y, ax
+    mov ax, [BIRD_X_POSITION]
+    mov tmp_x, ax
+
     mov cx, [BIRD_HEIGHT]
-    clean_outer_loop:
-        push cx
+    erase_lower_row:
+        push cx 
 
-        mov ax, [BIRD_X_POSITION]
-        mov tmp_x, ax ; set original value
-        mov cx, [BIRD_WIDTH]
-        clean_inner_loop:
-            push cx
+        mov cx, tmp_x
+        mov dx, tmp_y
+        mov al, [BLACK_COLOR]
+        mov ah, 0ch
+        mov bx, 0
+        int 10h
+        inc tmp_x
+        
+        pop cx
+        loop erase_lower_row
 
-            mov cx, tmp_x
-            mov dx, tmp_y
-            mov al, [BLACK_COLOR]
-            mov ah, 0ch
-            mov bx, 0                     
-            int 10h
-            add tmp_x, 1 
-     
-            pop cx
-            loop clean_inner_loop
 
-        add tmp_y, 1
-        pop cx  
-        loop clean_outer_loop
+    ; add upper row
+    mov ax, [BIRD_Y_POSITION]
+    mov tmp_y, ax
+    mov ax, [BIRD_X_POSITION]
+    mov tmp_x, ax
+    
+    mov cx, [BIRD_HEIGHT]
+    append_upper_row:
+        push cx 
+
+        mov cx, tmp_x
+        mov dx, tmp_y
+        mov al, [BIRD_COLOR]
+        mov ah, 0ch
+        mov bx, 0
+        int 10h
+        inc tmp_x
+        
+        pop cx
+        loop append_upper_row
+
 
     add sp, 4
 
     pop bp dx cx bx ax 
     ret 0
-endp cleanBird
+endp updateBird
 
 proc updateTubes
     push ax bx cx dx bp
     mov bp, sp
     sub sp, 4
+
 
     tmp_y equ [bp-2]
     tmp_x equ [bp-4]
@@ -330,8 +351,6 @@ proc checkCollision
 endp checkCollision
 
 
-
-
 proc updateBirdPlace
     push ax
     push bx
@@ -452,28 +471,31 @@ start:
     int 10h
 
     call drawtubes
+    call drawBird
 game_loop:
     ;call generateTubesValues
     ; mov ax, [TUBES_X_POSITION]
     ; cmp ax, 300
     ; jge callDrawTubes
 
-    call drawBird
+    sleep:
+        mov cx, 5000
+        sleep_loop:
+            loop sleep_loop
+
+    call updateBird
     call updateTubes
     mov ax, [TUBES_X_POSITION]
     dec ax
     mov [TUBES_X_POSITION], ax
-    ;call checkSpacePressed
+    call checkSpacePressed
     ;call updateBirdPlace
     ;call tubesMovement
-    ;call cleanBird
+
     ;call updateTubes
-    ;call checkCollision
-
-
+    call checkCollision
 
     jmp game_loop
-
 
 exit:
     mov ax, 03h
