@@ -156,8 +156,6 @@ endp drawBird
 
 
 
-
-
 proc cleanBird
     push ax bx cx dx bp 
     mov bp, sp
@@ -208,7 +206,7 @@ proc updateTubes
     tmp_y equ [bp-2]
     tmp_x equ [bp-4]
 
-    ; erase upper tub
+    ; erase upper tube
     mov ax, [UPPER_TUBE_Y_POSITION]
     mov tmp_y, ax
     mov ax, [TUBES_X_POSITION]
@@ -231,7 +229,7 @@ proc updateTubes
         loop erase_upper
 
 
-    ; erase lower tub
+    ; erase lower tube
     mov ax, [LOWER_TUBE_Y_POSITION]
     mov tmp_y, ax
     mov ax, [TUBES_X_POSITION]
@@ -254,7 +252,7 @@ proc updateTubes
         loop erase_lower
     
 
-    ; add to the left
+    ; add to the upper tube
     mov ax, [UPPER_TUBE_Y_POSITION]
     mov tmp_y, ax
     mov ax, [TUBES_X_POSITION]
@@ -275,7 +273,7 @@ proc updateTubes
         loop append_upper
 
 
-    ; add to the left
+    ; add to the lower tube
     mov ax, [LOWER_TUBE_Y_POSITION]
     mov tmp_y, ax
     mov ax, [TUBES_X_POSITION]
