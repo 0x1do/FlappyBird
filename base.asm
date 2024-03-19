@@ -223,6 +223,8 @@ proc updateTubes
     mov bp, sp
     sub sp, 4
 
+    mov si, [LOWER_TUBE_Y_POSITION]
+    mov di, [UPPER_TUBE_Y_POSITION]
 
     tmp_y equ [bp-2]
     tmp_x equ [bp-4]
@@ -314,6 +316,8 @@ proc updateTubes
         pop cx
         loop append_lower
 
+    mov [LOWER_TUBE_Y_POSITION], si
+    mov [UPPER_TUBE_Y_POSITION], di
 
     add sp, 4
     pop bp dx cx bx ax
@@ -470,8 +474,8 @@ start:
     mov ax, 13h
     int 10h
 
-    call drawtubes
-    call drawBird
+    ;call drawtubes
+    ;call drawBird
 game_loop:
     ;call generateTubesValues
     ; mov ax, [TUBES_X_POSITION]
@@ -483,7 +487,7 @@ game_loop:
         sleep_loop:
             loop sleep_loop
 
-    call updateBird
+    ;call updateBird
     call updateTubes
     mov ax, [TUBES_X_POSITION]
     dec ax
@@ -493,7 +497,7 @@ game_loop:
     ;call tubesMovement
 
     ;call updateTubes
-    call checkCollision
+    ;call checkCollision
 
     jmp game_loop
 
