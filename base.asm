@@ -376,15 +376,16 @@ proc drawTubes
     
 
     upper_tube:
-        mov ax, [UPPER_TUBE_Y_POSITION]
-        mov upper_tmp_y, ax
-        mov cx, [UPPER_TUBE_HEIGHT]
-        tube_outer_loop:
-            push cx
-
             mov ax, [TUBES_X_POSITION]
             mov tmp_x, ax
             mov cx, [TUBES_WIDTH]
+
+        tube_outer_loop:
+            push cx
+
+            mov ax, [UPPER_TUBE_Y_POSITION]
+            mov upper_tmp_y, ax
+            mov cx, [UPPER_TUBE_HEIGHT]
             tube_inner_loop:
                 push cx
 
@@ -394,26 +395,27 @@ proc drawTubes
                 mov ah, 0ch
                 mov bx, 0                     
                 int 10h ; drawing a pixel
-                inc tmp_x
+                inc upper_tmp_y
                 
                 pop cx
                 loop tube_inner_loop
 
-            inc upper_tmp_y
+            inc tmp_x
             pop cx  
             loop tube_outer_loop
 
     lower_tube:
-        mov ax, [LOWER_TUBE_Y_POSITION]
-        mov lower_tmp_y, ax
-        mov cx, [LOWER_TUBE_HEIGHT]
 
+        mov ax, [TUBES_X_POSITION]
+        mov tmp_x, ax
+        mov cx, [TUBES_WIDTH]
+        
         lower_tube_outer_loop:
             push cx
 
-            mov ax, [TUBES_X_POSITION]
-            mov tmp_x, ax
-            mov cx, [TUBES_WIDTH]
+            mov ax, [LOWER_TUBE_Y_POSITION]
+            mov lower_tmp_y, ax
+            mov cx, [LOWER_TUBE_HEIGHT]
             lower_tube_inner_loop:
                 push cx
 
@@ -423,12 +425,12 @@ proc drawTubes
                 mov ah, 0ch
                 mov bx, 0                     
                 int 10h
-                inc tmp_x
+                inc lower_tmp_y
                 
                 pop cx
                 loop lower_tube_inner_loop
 
-            inc lower_tmp_y
+            inc tmp_x
             pop cx  
             loop lower_tube_outer_loop
 
