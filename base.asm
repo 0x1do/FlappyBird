@@ -35,7 +35,6 @@ proc generateRandomNumber
 
     mov bx, [SCREEN_HEIGHT]
     sub bx, [GAP]
-    sub bx, [GAP]
     sub bx, 1 ; bl now contains the highest random possible value
     mov ax, 40h
     mov es, ax
@@ -51,8 +50,7 @@ proc generateRandomNumber
 endp generateRandomNumber
 
 proc generateTubesValues
-    push ax
-    push bx
+    push ax bx cx
     
     call generateRandomNumber
     
@@ -64,9 +62,12 @@ proc generateTubesValues
     sub bx, [GAP]
     
     mov [LOWER_TUBE_HEIGHT], bx
+    mov cx, [SCREEN_HEIGHT]
+    sub cx, [LOWER_TUBE_HEIGHT]
+    mov [LOWER_TUBE_Y_POSITION], cx
 
-    pop bx
-    pop ax
+
+    pop cx bx ax
     ret
 endp generateTubesValues
 
@@ -221,17 +222,18 @@ endp updateBird
 proc updateTubes
     push ax bx cx dx bp
     mov bp, sp
-    sub sp, 4
+    sub sp, 6
 
-    mov si, [LOWER_TUBE_Y_POSITION]
-    mov di, [UPPER_TUBE_Y_POSITION]
 
-    tmp_y equ [bp-2]
-    tmp_x equ [bp-4]
+    tmp_x equ [bp-2]
+    lower_tmp_y equ [bp-4]
+    upper_tmp_y equ [bp-6]
+
+
 
     ; erase upper tube
     mov ax, [UPPER_TUBE_Y_POSITION]
-    mov tmp_y, ax
+    mov upper_tmp_y, ax
     mov ax, [TUBES_X_POSITION]
     mov tmp_x, ax
     mov ax, [TUBES_WIDTH]
@@ -239,14 +241,14 @@ proc updateTubes
     mov cx, [UPPER_TUBE_HEIGHT]
     erase_upper:
         push cx 
-
+    
         mov cx, tmp_x
-        mov dx, tmp_y
+        mov dx, upper_tmp_y
         mov al, [BLACK_COLOR]
         mov ah, 0ch
         mov bx, 0
         int 10h
-        inc tmp_y
+        inc upper_tmp_y
         
         pop cx
         loop erase_upper
@@ -254,7 +256,7 @@ proc updateTubes
 
     ; erase lower tube
     mov ax, [LOWER_TUBE_Y_POSITION]
-    mov tmp_y, ax
+    mov lower_tmp_y, ax
     mov ax, [TUBES_X_POSITION]
     mov tmp_x, ax
     mov ax, [TUBES_WIDTH]
@@ -264,20 +266,20 @@ proc updateTubes
         push cx 
 
         mov cx, tmp_x
-        mov dx, tmp_y
+        mov dx, lower_tmp_y
         mov al, [BLACK_COLOR]
         mov ah, 0ch
         mov bx, 0
         int 10h
-        inc tmp_y
+        inc lower_tmp_y
         
         pop cx
         loop erase_lower
-    
+
 
     ; add to the upper tube
     mov ax, [UPPER_TUBE_Y_POSITION]
-    mov tmp_y, ax
+    mov upper_tmp_y, ax
     mov ax, [TUBES_X_POSITION]
     mov tmp_x, ax
     mov cx, [UPPER_TUBE_HEIGHT]
@@ -285,20 +287,20 @@ proc updateTubes
         push cx 
 
         mov cx, tmp_x
-        mov dx, tmp_y
+        mov dx, upper_tmp_y
         mov al, [TUBES_COLOR]
         mov ah, 0ch
         mov bx, 0
         int 10h 
-        inc tmp_y
-        
+        inc upper_tmp_y
+         
         pop cx
         loop append_upper
 
 
     ; add to the lower tube
     mov ax, [LOWER_TUBE_Y_POSITION]
-    mov tmp_y, ax
+    mov lower_tmp_y, ax
     mov ax, [TUBES_X_POSITION]
     mov tmp_x, ax
     mov cx, [LOWER_TUBE_HEIGHT]
@@ -306,20 +308,18 @@ proc updateTubes
         push cx 
 
         mov cx, tmp_x
-        mov dx, tmp_y
+        mov dx, lower_tmp_y
         mov al, [TUBES_COLOR]
         mov ah, 0ch
         mov bx, 0
         int 10h 
-        inc tmp_y
+        inc lower_tmp_y
         
         pop cx
         loop append_lower
 
-    mov [LOWER_TUBE_Y_POSITION], si
-    mov [UPPER_TUBE_Y_POSITION], di
 
-    add sp, 4
+    add sp, 6
     pop bp dx cx bx ax
     ret 0
 endp updateTubes
@@ -328,25 +328,38 @@ proc checkCollision
     push ax
     push bx
 
+    mov ax, [screen_height]
+    sub ax, 15
+    mov bx, [BIRD_Y_POSITION]
+    cmp bx, ax
+    jge collision
+    
+    mov ax, 0
+    cmp bx, ax
+    jle collision
+
+
     mov ax, [TUBES_X_POSITION]
     cmp ax, [BIRD_X_POSITION]
-    jne short noCollision
+    jne noCollision
 
     ; check collision with upper tube
     mov ax, [BIRD_Y_POSITION]   
-    cmp ax, [UPPER_TUBE_HEIGHT]
-    jle short collision
+    mov bx, [UPPER_TUBE_Y_POSITION]
+    add bx, [UPPER_TUBE_HEIGHT]
+    cmp ax, bx
+    jle collision
 
     ; check collision with lower tube
     mov bx, [SCREEN_HEIGHT]
     sub bx, [LOWER_TUBE_HEIGHT]
     cmp ax, bx
-    jge short collision
+    jge collision
     
-    jmp short noCollision
+    jmp noCollision
 
     collision:
-        ;jmp short exit
+        jmp exit
 
     noCollision:
         pop bx
@@ -463,9 +476,10 @@ proc drawTubes
 
 endp drawTubes
 
-proc callDrawTubes
-    call drawtubes
-endp calldrawtubes
+proc generateNewTubes
+    call generateTubesValues
+    call drawTubes
+endp generateNewTubes
 
 start:
     mov ax, @data
@@ -477,27 +491,26 @@ start:
     ;call drawtubes
     ;call drawBird
 game_loop:
-    ;call generateTubesValues
+    
     ; mov ax, [TUBES_X_POSITION]
-    ; cmp ax, 300
-    ; jge callDrawTubes
-
+    ; cmp ax, 20
+    ; je generateNewTubes
     sleep:
-        mov cx, 5000
-        sleep_loop:
-            loop sleep_loop
+        ; mov cx, 3000 
+        ; sleep_loop:
+        ;     loop sleep_loop
 
-    ;call updateBird
+    ; call updateBird
     call updateTubes
     mov ax, [TUBES_X_POSITION]
     dec ax
     mov [TUBES_X_POSITION], ax
-    call checkSpacePressed
+    ; call checkSpacePressed
     ;call updateBirdPlace
     ;call tubesMovement
 
-    ;call updateTubes
-    ;call checkCollision
+
+    call checkCollision
 
     jmp game_loop
 
