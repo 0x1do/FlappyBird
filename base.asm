@@ -488,29 +488,29 @@ start:
     mov ax, 13h
     int 10h
 
-    ;call drawtubes
-    ;call drawBird
+    call drawtubes
+    call drawBird
 game_loop:
     
     ; mov ax, [TUBES_X_POSITION]
     ; cmp ax, 20
     ; je generateNewTubes
     sleep:
-        ; mov cx, 3000 
-        ; sleep_loop:
-        ;     loop sleep_loop
+        mov cx, 3000 
+        sleep_loop:
+            loop sleep_loop
 
-    ; call updateBird
+    call updateBird
     call updateTubes
     mov ax, [TUBES_X_POSITION]
     dec ax
     mov [TUBES_X_POSITION], ax
-    ; call checkSpacePressed
-    ;call updateBirdPlace
+    call checkSpacePressed
+    call updateBirdPlace
     ;call tubesMovement
 
 
-    call checkCollision
+    ;call checkCollision
 
     jmp game_loop
 
