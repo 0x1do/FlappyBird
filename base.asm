@@ -96,7 +96,20 @@ proc CheckSpacePressed
     new_placing:
         mov [BIRD_Y_POSITION], ax
 
-    call birdgoingup
+
+
+    
+    ; gravity
+    sub [VELOCITY], 1
+    cmp [VELOCITY], -7
+    jle position_up
+    mov [VELOCITY], -7
+
+    position_up:
+        mov ax, [VELOCITY]
+        add [BIRD_Y_POSITION], ax
+
+    call birdgoingup   
 
     no_key_press:
         pop ax
@@ -443,10 +456,10 @@ proc updateBirdPlace
     ; gravity
     add [VELOCITY], 1
     cmp [VELOCITY], 1
-    jle position
+    jle position_down
     mov [VELOCITY], 1
 
-    position:
+    position_down:
         mov ax, [VELOCITY]
         add [BIRD_Y_POSITION], ax
 
@@ -553,11 +566,11 @@ game_loop:
     je generateNewTubes
 
     sleep:
-        mov cx, 65000    
+        mov cx, 50000    
         sleep_loop:
             loop sleep_loop
 
-    ;call birdGoingUp
+
     call updateTubes
     mov ax, [TUBES_X_POSITION]
     dec ax
