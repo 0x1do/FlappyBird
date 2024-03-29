@@ -61,9 +61,13 @@ proc generateTubesValues
     sub bx, ax
     sub bx, [GAP]
     
+
     mov [LOWER_TUBE_HEIGHT], bx
     mov cx, [SCREEN_HEIGHT]
     sub cx, [LOWER_TUBE_HEIGHT]
+    
+    
+    mov [UPPER_TUBE_Y_POSITION], 0    
     mov [LOWER_TUBE_Y_POSITION], cx
 
 
@@ -479,6 +483,7 @@ endp drawTubes
 proc generateNewTubes
     call generateTubesValues
     call drawTubes
+    mov [TUBES_X_POSITION], 300
 endp generateNewTubes
 
 start:
@@ -492,11 +497,11 @@ start:
     call drawBird
 game_loop:
     
-    ; mov ax, [TUBES_X_POSITION]
-    ; cmp ax, 20
-    ; je generateNewTubes
+    mov ax, [TUBES_X_POSITION]
+    cmp ax, 20
+    je generateNewTubes
     sleep:
-        mov cx, 3000 
+        mov cx, 5000    
         sleep_loop:
             loop sleep_loop
 
@@ -506,11 +511,11 @@ game_loop:
     dec ax
     mov [TUBES_X_POSITION], ax
     call checkSpacePressed
-    call updateBirdPlace
+    ;call updateBirdPlace
     ;call tubesMovement
 
 
-    ;call checkCollision
+    call checkCollision
 
     jmp game_loop
 
