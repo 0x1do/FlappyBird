@@ -96,6 +96,7 @@ proc CheckSpacePressed
     new_placing:
         mov [BIRD_Y_POSITION], ax
 
+    call birdgoingup
 
     no_key_press:
         pop ax
@@ -161,7 +162,7 @@ endp drawBird
 
 
 
-proc updateBird
+proc birdGoingUp
     push ax bx cx dx bp 
     mov bp, sp
     sub sp, 4
@@ -221,7 +222,70 @@ proc updateBird
 
     pop bp dx cx bx ax 
     ret 0
-endp updateBird
+endp birdGoingUp
+
+proc birdGoingDown
+    push ax bx cx dx bp 
+    mov bp, sp
+    sub sp, 4
+
+    tmp_x equ [bp-4]
+    tmp_y equ [bp-2]
+    
+
+
+    ; erase upper row
+    mov ax, [BIRD_Y_POSITION]
+    mov tmp_y, ax
+    mov ax, [BIRD_HEIGHT]
+    add tmp_y, ax
+    mov ax, [BIRD_X_POSITION]
+    mov tmp_x, ax
+
+    mov cx, [BIRD_HEIGHT]
+    erase_upper_row:
+        push cx 
+
+        mov cx, tmp_x
+        mov dx, tmp_y
+        mov al, [BIRD_COLOR]
+        mov ah, 0ch
+        mov bx, 0
+        int 10h
+        inc tmp_x
+        
+        pop cx
+        loop erase_upper_row
+
+
+    ; add lower row
+    mov ax, [BIRD_Y_POSITION]
+    mov tmp_y, ax
+    mov ax, [BIRD_X_POSITION]
+    mov tmp_x, ax
+    
+    mov cx, [BIRD_HEIGHT]
+    append_lower_row:
+        push cx 
+
+        mov cx, tmp_x
+        mov dx, tmp_y
+        mov al, [BLACK_COLOR]
+        mov ah, 0ch
+        mov bx, 0
+        int 10h
+        inc tmp_x
+        
+        pop cx
+        loop append_lower_row
+
+
+    add sp, 4
+
+    pop bp dx cx bx ax 
+    ret 0
+endp birdGoingDown
+
 
 proc updateTubes
     push ax bx cx dx bp
@@ -332,14 +396,15 @@ proc checkCollision
     push ax
     push bx
 
+    ; check collision with ceiling
     mov ax, [screen_height]
     sub ax, 15
     mov bx, [BIRD_Y_POSITION]
     cmp bx, ax
     jge collision
     
-    mov ax, 0
-    cmp bx, ax
+    ; check collision with floor
+    cmp bx, 0
     jle collision
 
 
@@ -374,33 +439,19 @@ endp checkCollision
 
 proc updateBirdPlace
     push ax
-    push bx
 
     ; gravity
-    mov ax, [VELOCITY]
-    add ax, 1
-    cmp ax, 5 ; so the falling wont be too fast
-    jle velocity_fine
-    mov ax, 5
+    add [VELOCITY], 1
+    cmp [VELOCITY], 1
+    jle position
+    mov [VELOCITY], 1
 
-    velocity_fine:
-        mov [VELOCITY], ax
-        
-    mov ax, [BIRD_Y_POSITION]
-    add ax, [VELOCITY] ; pushing the bird down
-    cmp ax, [SCREEN_HEIGHT] ; if bird goes above screen height
-    jge new_position
-    cmp ax, 0 
-    jge new_position
-    mov ax, [SCREEN_HEIGHT]
+    position:
+        mov ax, [VELOCITY]
+        add [BIRD_Y_POSITION], ax
 
-    mov [BIRD_Y_POSITION], ax
-    new_position:
-        mov bx, [SCREEN_HEIGHT]
-        add bx, 5
-        mov [BIRD_Y_POSITION], bx
+    call birdGoingDown
 
-    pop bx
     pop ax
     ret
 endp updateBirdPlace
@@ -500,21 +551,19 @@ game_loop:
     mov ax, [TUBES_X_POSITION]
     cmp ax, 20
     je generateNewTubes
+
     sleep:
-        mov cx, 5000    
+        mov cx, 65000    
         sleep_loop:
             loop sleep_loop
 
-    call updateBird
+    ;call birdGoingUp
     call updateTubes
     mov ax, [TUBES_X_POSITION]
     dec ax
     mov [TUBES_X_POSITION], ax
     call checkSpacePressed
-    ;call updateBirdPlace
-    ;call tubesMovement
-
-
+    call updateBirdPlace
     call checkCollision
 
     jmp game_loop
