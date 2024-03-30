@@ -109,7 +109,8 @@ proc CheckSpacePressed
         mov ax, [VELOCITY]
         add [BIRD_Y_POSITION], ax
 
-    call birdgoingup   
+
+    call drawbird
 
     no_key_press:
         pop ax
@@ -298,6 +299,55 @@ proc birdGoingDown
     ret 0
 endp birdGoingDown
 
+proc cleanBird
+    push ax bx cx dx bp
+
+    mov bp, sp
+
+    sub sp, 4
+
+    tmp_x equ [bp-4]
+    tmp_y equ [bp-2]
+    
+
+    
+
+    mov ax, [BIRD_Y_POSITION]
+    mov tmp_y, ax ; set original value
+    mov cx, [BIRD_HEIGHT]
+    clean_outer_loop:
+        push cx
+
+        mov ax, [BIRD_X_POSITION]
+        mov tmp_x, ax ; set original value
+        mov cx, [BIRD_WIDTH]
+        clean_inner_loop:
+            push cx
+
+            mov cx, tmp_x
+            mov dx, tmp_y
+            mov al, [BLACK_COLOR]
+            mov ah, 0ch
+            mov bx, 0                     
+            int 10h
+            add tmp_x, 1 
+     
+            pop cx
+            loop clean_inner_loop
+
+        add tmp_y, 1
+        pop cx  
+        loop clean_outer_loop
+
+    add sp, 4
+
+
+
+
+    pop bp dx cx bx ax
+    ret 0
+endp cleanBird
+
 
 proc updateTubes
     push ax bx cx dx bp
@@ -462,7 +512,7 @@ proc updateBirdPlace
         mov ax, [VELOCITY]
         add [BIRD_Y_POSITION], ax
 
-    call birdGoingDown
+    ;call cleanbird
 
     pop ax
     ret
@@ -575,9 +625,12 @@ game_loop:
     dec ax
     mov [TUBES_X_POSITION], ax
     call checkSpacePressed
+    call drawbird
+    call cleanbird
     call updateBirdPlace
+    call drawbird
     call checkCollision
-
+    call cleanbird
     jmp game_loop
 
 exit:
