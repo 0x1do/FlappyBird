@@ -176,129 +176,6 @@ endp drawBird
 
 
 
-proc birdGoingUp
-    push ax bx cx dx bp 
-    mov bp, sp
-    sub sp, 4
-
-    tmp_x equ [bp-4]
-    tmp_y equ [bp-2]
-    
-
-    ; erase lower row
-    mov ax, [BIRD_Y_POSITION]
-    mov tmp_y, ax
-    mov ax, [BIRD_HEIGHT]
-    add tmp_y, ax
-    mov ax, [BIRD_X_POSITION]
-    mov tmp_x, ax
-
-    mov cx, [BIRD_HEIGHT]
-    erase_lower_row:
-        push cx 
-
-        mov cx, tmp_x
-        mov dx, tmp_y
-        mov al, [BLACK_COLOR]
-        mov ah, 0ch
-        mov bx, 0
-        int 10h
-        inc tmp_x
-        
-        pop cx
-        loop erase_lower_row
-
-
-    ; add upper row
-    mov ax, [BIRD_Y_POSITION]
-    mov tmp_y, ax
-    mov ax, [BIRD_X_POSITION]
-    mov tmp_x, ax
-    
-    mov cx, [BIRD_HEIGHT]
-    append_upper_row:
-        push cx 
-
-        mov cx, tmp_x
-        mov dx, tmp_y
-        mov al, [BIRD_COLOR]
-        mov ah, 0ch
-        mov bx, 0
-        int 10h
-        inc tmp_x
-        
-        pop cx
-        loop append_upper_row
-
-
-    add sp, 4
-
-    pop bp dx cx bx ax 
-    ret 0
-endp birdGoingUp
-
-proc birdGoingDown
-    push ax bx cx dx bp 
-    mov bp, sp
-    sub sp, 4
-
-    tmp_x equ [bp-4]
-    tmp_y equ [bp-2]
-    
-
-
-    ; erase upper row
-    mov ax, [BIRD_Y_POSITION]
-    mov tmp_y, ax
-    mov ax, [BIRD_HEIGHT]
-    add tmp_y, ax
-    mov ax, [BIRD_X_POSITION]
-    mov tmp_x, ax
-
-    mov cx, [BIRD_HEIGHT]
-    erase_upper_row:
-        push cx 
-
-        mov cx, tmp_x
-        mov dx, tmp_y
-        mov al, [BIRD_COLOR]
-        mov ah, 0ch
-        mov bx, 0
-        int 10h
-        inc tmp_x
-        
-        pop cx
-        loop erase_upper_row
-
-
-    ; add lower row
-    mov ax, [BIRD_Y_POSITION]
-    mov tmp_y, ax
-    mov ax, [BIRD_X_POSITION]
-    mov tmp_x, ax
-    
-    mov cx, [BIRD_HEIGHT]
-    append_lower_row:
-        push cx 
-
-        mov cx, tmp_x
-        mov dx, tmp_y
-        mov al, [BLACK_COLOR]
-        mov ah, 0ch
-        mov bx, 0
-        int 10h
-        inc tmp_x
-        
-        pop cx
-        loop append_lower_row
-
-
-    add sp, 4
-
-    pop bp dx cx bx ax 
-    ret 0
-endp birdGoingDown
-
 proc cleanBird
     push ax bx cx dx bp
 
@@ -615,7 +492,7 @@ game_loop:
     je generateNewTubes
 
     sleep:
-        mov cx, 40000    
+        mov cx, 15000    
         sleep_loop:
             loop sleep_loop
 
