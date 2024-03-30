@@ -184,7 +184,6 @@ proc birdGoingUp
     tmp_y equ [bp-2]
     
 
-
     ; erase lower row
     mov ax, [BIRD_Y_POSITION]
     mov tmp_y, ax
@@ -566,7 +565,7 @@ game_loop:
     je generateNewTubes
 
     sleep:
-        mov cx, 50000    
+        mov cx, 40000    
         sleep_loop:
             loop sleep_loop
 
