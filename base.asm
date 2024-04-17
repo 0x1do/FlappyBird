@@ -7,7 +7,7 @@ DATASEG
 
     GAP dw 50
     SCREEN_HEIGHT dw 200
-    BACKGROUND_COLOR db 11
+    BACKGROUND_COLOR db 00h
     BLACK_COLOR  db 00h
 
     ; tubes variables:
@@ -101,9 +101,9 @@ proc CheckSpacePressed
     
     ; gravity
     sub [VELOCITY], 1
-    cmp [VELOCITY], -7
+    cmp [VELOCITY], -9
     jle position_up
-    mov [VELOCITY], -7
+    mov [VELOCITY], -9
 
     position_up:
         mov ax, [VELOCITY]
