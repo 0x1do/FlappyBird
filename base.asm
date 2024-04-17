@@ -7,7 +7,7 @@ DATASEG
 
     GAP dw 50
     SCREEN_HEIGHT dw 200
-    BACKGROUND_COLOR db 00h
+    BACKGROUND_COLOR db 15h
     BLACK_COLOR  db 00h
 
     ; tubes variables:
