@@ -1,4 +1,9 @@
 # Flappy Bird
+
+### **not a school project!!!**
+
 side project in TASM assembly
 
- *not a finished project* 
+
+
+ *semi-finished project* 
